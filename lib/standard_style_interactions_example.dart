@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'lighting_helper.dart';  // 🔴 Ensure lighting_helper.dart is imported
 
 class StandardStyleInteractionsExample extends StatefulWidget {
   @override
@@ -16,51 +17,35 @@ class StandardStyleInteractionsExample extends StatefulWidget {
   State<StatefulWidget> createState() => StandardStyleInteractionsState();
 }
 
-class StandardStyleInteractionsState
-    extends State<StandardStyleInteractionsExample> {
-  StandardStyleInteractionsState();
+class StandardStyleInteractionsState extends State<StandardStyleInteractionsExample> {
+  // 🔴 We use the class-level lightPreset here
+  String lightPreset = 'day'; 
   MapboxMap? mapboxMap;
 
-  /// Default style import config properties for Mapbox Standard style.
-  String lightPreset = 'day';
-  String theme = 'default';
-  String buildingHighlightColor = 'hsl(214, 94%, 59%)';
-
-  _onMapCreated(MapboxMap mapboxMap) {
+  @override
+  void _onMapCreated(MapboxMap mapboxMap) {
     this.mapboxMap = mapboxMap;
     mapboxMap.style;
 
-    /// When a POI feature in the Standard POI featureset is tapped hide the POI
+    // Existing code follows
     var tapInteractionPOI = TapInteraction(StandardPOIs(), (feature, _) {
-      mapboxMap.setFeatureStateForFeaturesetFeature(
-          feature, StandardPOIsState(hide: true));
+      mapboxMap.setFeatureStateForFeaturesetFeature(feature, StandardPOIsState(hide: true));
       log("POI feature name: ${feature.name}");
-
-      /// Not stopping propagation means that the tap event will be propagated to other interactions.
     }, radius: 10, stopPropagation: false);
-    mapboxMap.addInteraction(tapInteractionPOI,
-        interactionID: "tap_interaction_poi");
+    mapboxMap.addInteraction(tapInteractionPOI, interactionID: "tap_interaction_poi");
 
-    /// When a building in the Standard Buildings featureset is tapped, set that building as highlighted to color it.
-    var tapInteractionBuildings =
-        TapInteraction(StandardBuildings(), (feature, _) {
-      mapboxMap.setFeatureStateForFeaturesetFeature(
-          feature, StandardBuildingsState(highlight: true));
+    var tapInteractionBuildings = TapInteraction(StandardBuildings(), (feature, _) {
+      mapboxMap.setFeatureStateForFeaturesetFeature(feature, StandardBuildingsState(highlight: true));
       log("Building group: ${feature.group}");
     });
     mapboxMap.addInteraction(tapInteractionBuildings);
 
-    /// When a place label in the Standard Place Labels featureset is tapped, set that place label as selected.
-    var tapInteractionPlaceLabel =
-        TapInteraction(StandardPlaceLabels(), (feature, _) {
-      mapboxMap.setFeatureStateForFeaturesetFeature(
-          feature, StandardPlaceLabelsState(select: true));
+    var tapInteractionPlaceLabel = TapInteraction(StandardPlaceLabels(), (feature, _) {
+      mapboxMap.setFeatureStateForFeaturesetFeature(feature, StandardPlaceLabelsState(select: true));
       log("Place label: ${feature.name}");
     });
     mapboxMap.addInteraction(tapInteractionPlaceLabel);
 
-    // When the map is long-tapped print the screen coordinates of the tap
-    // and reset the state of all features in the Standard POIs, Buildings, and Place Labels featuresets.
     var longTapInteraction = LongTapInteraction.onMap((context) {
       log("Long tap at: ${context.touchPosition.x}, ${context.touchPosition.y}");
       mapboxMap.resetFeatureStatesForFeatureset(StandardPOIs());
@@ -70,105 +55,22 @@ class StandardStyleInteractionsState
     mapboxMap.addInteraction(longTapInteraction);
   }
 
-  Widget _buildDebugPanel() {
-    return Container(
-      padding: EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black,
-            offset: Offset(0, 2),
-            blurRadius: 4,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Building Color'),
-          DropdownButton<String>(
-            value: buildingHighlightColor,
-            items: [
-              DropdownMenuItem(
-                  value: 'hsl(214, 94%, 59%)', child: Text('Blue')),
-              DropdownMenuItem(value: 'yellow', child: Text('Yellow')),
-              DropdownMenuItem(value: 'red', child: Text('Red')),
-            ],
-            onChanged: (value) {
-              setState(() {
-                buildingHighlightColor = value!;
-                _updateMapStyle();
-              });
-            },
-          ),
-          SizedBox(height: 10),
-          Text('Light'),
-          DropdownButton<String>(
-            value: lightPreset,
-            items: [
-              DropdownMenuItem(value: 'dawn', child: Text('Dawn')),
-              DropdownMenuItem(value: 'day', child: Text('Day')),
-              DropdownMenuItem(value: 'dusk', child: Text('Dusk')),
-              DropdownMenuItem(value: 'night', child: Text('Night')),
-            ],
-            onChanged: (value) {
-              setState(() {
-                lightPreset = value!;
-                _updateMapStyle();
-              });
-            },
-          ),
-          SizedBox(height: 10),
-          Text('Theme'),
-          DropdownButton<String>(
-            value: theme,
-            items: [
-              DropdownMenuItem(value: 'default', child: Text('Default')),
-              DropdownMenuItem(value: 'faded', child: Text('Faded')),
-              DropdownMenuItem(value: 'monochrome', child: Text('Monochrome')),
-            ],
-            onChanged: (value) {
-              setState(() {
-                theme = value!;
-                _updateMapStyle();
-              });
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Stack(children: [
-      MapWidget(
-        key: ValueKey("mapWidget"),
-        cameraOptions: CameraOptions(
+      body: Stack(children: [
+        MapWidget(
+          key: ValueKey("mapWidget"),
+          cameraOptions: CameraOptions(
             center: Point(coordinates: Position(-96.7970, 32.7767)),
             bearing: 49.92,
             zoom: 16.35,
             pitch: 40),
-
-        /// NOT FOR PRODUCTION USE. An experimental version of the Mapbox Standard style.
-        styleUri: MapboxStyles.STANDARD_EXPERIMENTAL,
-        textureView: true,
-        onMapCreated: _onMapCreated,
-      ),
-      
-    ]));
-  }
-
-  void _updateMapStyle() {
-    // Update the map style's config properties based on the selected options
-    var configs = {
-      "lightPreset": lightPreset,
-      "theme": theme,
-      "buildingHighlightColor": buildingHighlightColor,
-    };
-    mapboxMap?.style.setStyleImportConfigProperties("basemap", configs);
+          styleUri: LightingHelper.getStyleUri(),
+          textureView: true,
+          onMapCreated: _onMapCreated, // The method when map is created
+        ),
+      ]),
+    );
   }
 }

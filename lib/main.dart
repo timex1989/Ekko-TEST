@@ -2,6 +2,8 @@ import 'standard_style_interactions_example.dart';
 import 'package:flutter/material.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'welcome_screen.dart';
+import 'lighting_helper.dart';
+
 
 final List<Widget> _allPages = [
   StandardStyleInteractionsExample(),
