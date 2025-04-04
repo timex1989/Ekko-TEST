@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'dart:convert'; // 🔴 ADDED FOR MODEL SUPPORT
 import 'package:flutter/material.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'lighting_helper.dart';  // 🔴 Ensure lighting_helper.dart is imported
@@ -18,41 +19,37 @@ class StandardStyleInteractionsExample extends StatefulWidget {
 }
 
 class StandardStyleInteractionsState extends State<StandardStyleInteractionsExample> {
-  // 🔴 We use the class-level lightPreset here
   String lightPreset = 'day'; 
   MapboxMap? mapboxMap;
+
+  final modelPosition = Position(-96.7970, 32.7767); // 🔴 Dallas test coordinate
 
   @override
   void _onMapCreated(MapboxMap mapboxMap) {
     this.mapboxMap = mapboxMap;
-    mapboxMap.style;
+  }
 
-    // Existing code follows
-    var tapInteractionPOI = TapInteraction(StandardPOIs(), (feature, _) {
-      mapboxMap.setFeatureStateForFeaturesetFeature(feature, StandardPOIsState(hide: true));
-      log("POI feature name: ${feature.name}");
-    }, radius: 10, stopPropagation: false);
-    mapboxMap.addInteraction(tapInteractionPOI, interactionID: "tap_interaction_poi");
+  void _onStyleLoaded(StyleLoadedEventData data) async {
+    if (mapboxMap == null) return;
 
-    var tapInteractionBuildings = TapInteraction(StandardBuildings(), (feature, _) {
-      mapboxMap.setFeatureStateForFeaturesetFeature(feature, StandardBuildingsState(highlight: true));
-      log("Building group: ${feature.group}");
-    });
-    mapboxMap.addInteraction(tapInteractionBuildings);
+    final point = Point(coordinates: modelPosition);
 
-    var tapInteractionPlaceLabel = TapInteraction(StandardPlaceLabels(), (feature, _) {
-      mapboxMap.setFeatureStateForFeaturesetFeature(feature, StandardPlaceLabelsState(select: true));
-      log("Place label: ${feature.name}");
-    });
-    mapboxMap.addInteraction(tapInteractionPlaceLabel);
+    const modelId = "model-buggy";
+    const modelUri = "https://github.com/KhronosGroup/glTF-Sample-Models/raw/main/2.0/Buggy/glTF-Binary/Buggy.glb";
 
-    var longTapInteraction = LongTapInteraction.onMap((context) {
-      log("Long tap at: ${context.touchPosition.x}, ${context.touchPosition.y}");
-      mapboxMap.resetFeatureStatesForFeatureset(StandardPOIs());
-      mapboxMap.resetFeatureStatesForFeatureset(StandardBuildings());
-      mapboxMap.resetFeatureStatesForFeatureset(StandardPlaceLabels());
-    });
-    mapboxMap.addInteraction(longTapInteraction);
+    await mapboxMap!.style.addStyleModel(modelId, modelUri);
+
+    await mapboxMap!.style.addSource(
+      GeoJsonSource(id: "model-source", data: json.encode(point)),
+    );
+
+    final modelLayer = ModelLayer(id: "model-layer", sourceId: "model-source");
+    modelLayer.modelId = modelId;
+    modelLayer.modelScale = [0.15, 0.15, 0.15];
+    modelLayer.modelRotation = [0, 0, 0];
+    modelLayer.modelType = ModelType.COMMON_3D;
+
+    await mapboxMap!.style.addLayer(modelLayer);
   }
 
   @override
@@ -68,7 +65,8 @@ class StandardStyleInteractionsState extends State<StandardStyleInteractionsExam
             pitch: 40),
           styleUri: LightingHelper.getStyleUri(),
           textureView: true,
-          onMapCreated: _onMapCreated, // The method when map is created
+          onMapCreated: _onMapCreated,
+          onStyleLoadedListener: _onStyleLoaded, // 🔴 ADDED FOR MODEL SUPPORT
         ),
       ]),
     );
