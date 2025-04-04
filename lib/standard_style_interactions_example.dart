@@ -3,6 +3,7 @@ import 'dart:convert'; // 🔴 ADDED FOR MODEL SUPPORT
 import 'package:flutter/material.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'lighting_helper.dart';  // 🔴 Ensure lighting_helper.dart is imported
+import 'buggy_model.dart'; // 🔴 new import
 
 class StandardStyleInteractionsExample extends StatefulWidget {
   @override
@@ -27,29 +28,7 @@ class StandardStyleInteractionsState extends State<StandardStyleInteractionsExam
   @override
   void _onMapCreated(MapboxMap mapboxMap) {
     this.mapboxMap = mapboxMap;
-  }
-
-  void _onStyleLoaded(StyleLoadedEventData data) async {
-    if (mapboxMap == null) return;
-
-    final point = Point(coordinates: modelPosition);
-
-    const modelId = "model-buggy";
-    const modelUri = "https://github.com/KhronosGroup/glTF-Sample-Models/raw/main/2.0/Buggy/glTF-Binary/Buggy.glb";
-
-    await mapboxMap!.style.addStyleModel(modelId, modelUri);
-
-    await mapboxMap!.style.addSource(
-      GeoJsonSource(id: "model-source", data: json.encode(point)),
-    );
-
-    final modelLayer = ModelLayer(id: "model-layer", sourceId: "model-source");
-    modelLayer.modelId = modelId;
-    modelLayer.modelScale = [0.15, 0.15, 0.15];
-    modelLayer.modelRotation = [0, 0, 0];
-    modelLayer.modelType = ModelType.COMMON_3D;
-
-    await mapboxMap!.style.addLayer(modelLayer);
+    addBuggyModel(mapboxMap); // 🔴 Model now handled externally
   }
 
   @override
@@ -66,7 +45,6 @@ class StandardStyleInteractionsState extends State<StandardStyleInteractionsExam
           styleUri: LightingHelper.getStyleUri(),
           textureView: true,
           onMapCreated: _onMapCreated,
-          onStyleLoadedListener: _onStyleLoaded, // 🔴 ADDED FOR MODEL SUPPORT
         ),
       ]),
     );
