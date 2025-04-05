@@ -3,7 +3,7 @@ import 'dart:convert'; // 🔴 ADDED FOR MODEL SUPPORT
 import 'package:flutter/material.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'lighting_helper.dart';  // 🔴 Ensure lighting_helper.dart is imported
-import 'buggy_model.dart'; // 🔴 new import
+import 'red_beacon.dart'; // 🔴 new import
 
 class StandardStyleInteractionsExample extends StatefulWidget {
   @override
@@ -28,7 +28,7 @@ class StandardStyleInteractionsState extends State<StandardStyleInteractionsExam
   @override
   void _onMapCreated(MapboxMap mapboxMap) {
     this.mapboxMap = mapboxMap;
-    addBuggyModel(mapboxMap); // 🔴 Model now handled externally
+    addRedBeaconModel(mapboxMap); // 🔴 Model now handled externally
   }
 
   @override
